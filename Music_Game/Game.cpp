@@ -180,8 +180,8 @@ void Game::Update(float deltaTime, float totalTime)
 	//If in scene 1 go to scene 2
 	if (GetAsyncKeyState(VK_RETURN) && SceneNumber == 1)
 	{
-		SceneNumber = 2;
-		setScene();
+		//SceneNumber = 2;
+		//setScene();
 	}
 
 	musicPlayer.update();

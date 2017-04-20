@@ -136,7 +136,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float4 skyColor = Sky.Sample(basicSampler, reflect(-dirToPointLight, input.normal));
 	//---------------------------------------------------------------------------------------------
 	
-	//return lerp((global + DirLights + PLights + SLights), skyColor, 0.01f);
-	return global + DirLights + PLights + SLights;
+	return lerp((global + DirLights + PLights + SLights), skyColor, 0.01f);
+	//return global + DirLights + PLights + SLights;
 
 }

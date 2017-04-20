@@ -87,8 +87,8 @@ void SceneBuilder::BuildMaterials()
 	//path = L"Assets/textures/asteroid.png";
 	path = L"Assets/textures/rock.jpg";
 	asteroidMat = new Material(device, context, path);
-	path = L"Assets/textures/rockNormals.jpg";
-	asteroidMat->SetNormalMap(device, context, path);
+	//path = L"Assets/textures/rockNormals.jpg";
+	//asteroidMat->SetNormalMap(device, context, path);
 
 	path = L"Assets/textures/pluto.jpg";
 	plutoMat = new Material(device, context, path);
@@ -204,9 +204,12 @@ void SceneBuilder::SetupScenes()
 	scene1->entities = std::vector<Entity*>();
 	scene1->globalLights.push_back(ambient);
 	scene1->directionalLights.push_back(dirLight3);
-	scene1->entities.push_back(menuEnt);
+	scene1->entities.push_back(testNormals);
+	scene1->directionalLights.push_back(dirLight);
+	scene1->directionalLights.push_back(dirLight2);
+	scene1->directionalLights.push_back(dirLight4);
+
 	scene1->background = menuBackgroundEnt;
-	//scene1->musicFileName = "04_-_Bloody_Revenge.mp3";
 	
 
 	//Scene 2
@@ -224,14 +227,10 @@ void SceneBuilder::SetupScenes()
 	scene2->entities.push_back(asteroidEnt4);
 	scene2->entities.push_back(asteroidEnt5);
 	scene2->entities.push_back(plutoEnt);
-	scene2->entities.push_back(testNormals);
 	scene2->musicFileName = "04_-_Bloody_Revenge.mp3";
 
 
-	scene2->directionalLights.push_back(dirLight);
-	scene2->directionalLights.push_back(dirLight2);
-	scene2->directionalLights.push_back(dirLight4);
-
+	
 	
 	//Scene 3
 	//------------------------------------------------------------------
