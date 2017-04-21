@@ -46,6 +46,7 @@ private:
 	Mesh* sphereMesh;
 	Mesh* playerMesh;
 	Mesh* asteroidMesh;
+	Mesh* skyboxMesh;
 	
 	//Material* creditsMat;
 	Material* menuMat;

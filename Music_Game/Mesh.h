@@ -13,7 +13,7 @@ class Mesh
 
 public:
 	Mesh();
-	Mesh(char*, ID3D11Device*);
+	Mesh(char*, ID3D11Device*, bool);
 	Mesh(Vertex*, int, UINT*, int, ID3D11Device*);
 	~Mesh();
 
@@ -24,10 +24,14 @@ public:
 	std::vector<Vertex> GetVertexCollection();
 	std::vector<UINT> GetIndexCollection();
 
+	void CalculateTangents(Vertex*, int, unsigned int*, int);
+
 private:
 	ID3D11Buffer* vertBuffer;
 	ID3D11Buffer* indBuffer;
 	unsigned int indCount;
+
+	bool hasNormalMap;
 
 	std::vector<Vertex> vertexCollection;
 	std::vector<UINT> indexCollection;

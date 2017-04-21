@@ -25,6 +25,7 @@ SceneBuilder::~SceneBuilder()
 	delete asteroidMesh;
 	delete quadMesh;
 	delete playerMesh;
+	delete skyboxMesh;
 
 	delete menuEnt;
 	delete playerEnt;
@@ -87,8 +88,8 @@ void SceneBuilder::BuildMaterials()
 	//path = L"Assets/textures/asteroid.png";
 	path = L"Assets/textures/rock.jpg";
 	asteroidMat = new Material(device, context, path);
-	//path = L"Assets/textures/rockNormals.jpg";
-	//asteroidMat->SetNormalMap(device, context, path);
+	path = L"Assets/textures/rockNormals.jpg";
+	asteroidMat->SetNormalMap(device, context, path);
 
 	path = L"Assets/textures/pluto.jpg";
 	plutoMat = new Material(device, context, path);
@@ -149,15 +150,17 @@ void SceneBuilder::BuildLights()
 //---------------------------------------------------------
 void SceneBuilder::BuildMeshes()
 {
-	cubeMesh = new Mesh("cube", device);
+	cubeMesh = new Mesh("cube", device, false);
 
-	quadMesh = new Mesh("quad", device);
+	skyboxMesh = new Mesh("cube", device, true);
 
-	sphereMesh = new Mesh("sphere", device);
+	quadMesh = new Mesh("quad", device, false);
 
-	playerMesh = new Mesh("sphere", device);
+	sphereMesh = new Mesh("sphere", device, false);
 
-	asteroidMesh = new Mesh("sphereTest", device);
+	playerMesh = new Mesh("sphere", device, false);
+
+	asteroidMesh = new Mesh("sphereTest", device, true);
 }
 
 //---------------------------------------------------------
@@ -184,8 +187,8 @@ void SceneBuilder::BuildEntities()
 
 	plutoEnt = new Entity(sphereMesh, plutoMat, XMFLOAT3(+8.0f, +7.0f, 10.0f), XMFLOAT3(+0.0f, +0.0f, +0.0f), XMFLOAT3(+3.0f, +3.0f, +3.0f));
 
-	menuBackgroundEnt = new Entity(cubeMesh, backgroundMat, XMFLOAT3(0.0f, 0.0f, 5.0f), XMFLOAT3(+0.0f, +0.0f, +0.0f), XMFLOAT3(+10.0f, +10.0f, +10.0f));
-	gameBackgroundEnt = new Entity(cubeMesh, backgroundMat, XMFLOAT3(0.0f, 0.0f, 5.0f), XMFLOAT3(+0.0f, +0.0f, +0.0f), XMFLOAT3(+10.0f, +10.0f, +10.0f));
+	menuBackgroundEnt = new Entity(skyboxMesh, backgroundMat, XMFLOAT3(0.0f, 0.0f, 5.0f), XMFLOAT3(+0.0f, +0.0f, +0.0f), XMFLOAT3(+10.0f, +10.0f, +10.0f));
+	gameBackgroundEnt = new Entity(skyboxMesh, backgroundMat, XMFLOAT3(0.0f, 0.0f, 5.0f), XMFLOAT3(+0.0f, +0.0f, +0.0f), XMFLOAT3(+10.0f, +10.0f, +10.0f));
 	//creditsBackgroundEnt = new Entity(cubeMesh, backgroundMat, XMFLOAT3(0.0f, 0.0f, 5.0f), XMFLOAT3(+0.0f, +0.0f, +0.0f), XMFLOAT3(+10.0f, +10.0f, +10.0f));
 
 	laneEnt = new Entity(quadMesh, laneMat, XMFLOAT3(-2.0f, -1.0f, 10.0f), XMFLOAT3(+1.5f, +0.0f, +0.0f), XMFLOAT3(+1.0f, +2.0f, +2.0f));
