@@ -48,6 +48,8 @@ private:
 	SimplePixelShader* pixelShaderNormalMap;
 	SimpleVertexShader* skyVS;
 	SimplePixelShader* skyPS;
+	SimplePixelShader* pixelShaderBlend;
+	SimplePixelShader* pixelShaderNormalMapBlend;
 
 	// Keeps track of the old mouse position.  Useful for 
 	// determining how far the mouse moved in a single frame.

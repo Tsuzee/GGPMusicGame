@@ -137,6 +137,9 @@ void Material::PrepareMaterial(DirectX::XMFLOAT4X4 world, DirectX::XMFLOAT4X4 vi
 	vertexShader->SetShader();
 }
 
+//---------------------------------------------------------
+//Prepare the skybox for drawing
+//---------------------------------------------------------
 void Material::PrepareSkybox(DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 projection, SimpleVertexShader* skyVS, SimplePixelShader* skyPS)
 {
 	skyVS->SetMatrix4x4("view", view);
@@ -147,6 +150,14 @@ void Material::PrepareSkybox(DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proje
 	skyPS->SetShaderResourceView("Sky", skySRV);
 	skyPS->CopyAllBufferData();
 	skyPS->SetShader();
+}
+
+//---------------------------------------------------------
+//Set whether or not the material uses transperancy
+//---------------------------------------------------------
+void Material::UseTransperancy(bool _usesTrans)
+{
+	usesTrans = _usesTrans;
 }
 
 //---------------------------------------------------------
@@ -203,4 +214,12 @@ ID3D11DepthStencilState* Material::GetDepthSD()
 bool Material::HasNormalMap()
 {
 	return hasNormal;
+}
+
+//---------------------------------------------------------
+//Return if the material uses transperancy or not
+//---------------------------------------------------------
+bool Material::UseTransperancy()
+{
+	return usesTrans;
 }

@@ -63,6 +63,8 @@ Game::~Game()
 	delete pixelShaderNormalMap;
 	delete skyVS;
 	delete skyPS;
+	delete pixelShaderBlend;
+	delete pixelShaderNormalMapBlend;
 }
 
 // --------------------------------------------------------
@@ -76,7 +78,7 @@ void Game::Init()
 
 	LoadShaders();
 
-	Render.SetShaders(vertexShader, pixelShader, vertexShaderNormalMap, pixelShaderNormalMap, skyVS, skyPS);
+	Render.SetShaders(vertexShader, pixelShader, vertexShaderNormalMap, pixelShaderNormalMap, skyVS, skyPS, pixelShaderBlend, pixelShaderNormalMapBlend);
 
 	SceneBuild.Init(device, context);
 	SceneManag.AddScene(SceneBuild.GetScene(1));
@@ -87,7 +89,7 @@ void Game::Init()
 	SceneNumber = 1;
 	setScene();
 
-	Render.Init(&Cam, context, backBufferRTV, swapChain, depthStencilView);
+	Render.Init(&Cam, context, backBufferRTV, swapChain, depthStencilView, device);
 
 	if (SceneManag.GetScene(SceneNumber)->musicFileName) {
 		musicPlayer.setSound(SceneManag.GetScene(SceneNumber)->musicFileName);
@@ -143,6 +145,14 @@ void Game::LoadShaders()
 	skyPS = new SimplePixelShader(device, context);
 	if (!skyPS->LoadShaderFile(L"Debug/SkyPS.cso"))
 		skyPS->LoadShaderFile(L"SkyPS.cso");
+
+	pixelShaderBlend = new SimplePixelShader(device, context);
+	if (!pixelShaderBlend->LoadShaderFile(L"Debug/BlendPixelShader.cso"))
+		pixelShaderBlend->LoadShaderFile(L"BlendPixelShader.cso");
+
+	pixelShaderNormalMapBlend = new SimplePixelShader(device, context);
+	if (!pixelShaderNormalMapBlend->LoadShaderFile(L"Debug/PixelShaderNormalMapBlend.cso"))
+		pixelShaderNormalMapBlend->LoadShaderFile(L"PixelShaderNormalMapBlend.cso");
 }
 
 void Game::setScene()

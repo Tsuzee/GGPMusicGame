@@ -24,20 +24,24 @@ Renderer::~Renderer() {}
 //---------------------------------------------------------
 //Inititialize one time members
 //---------------------------------------------------------
-void Renderer::Init(Camera* _Cam, ID3D11DeviceContext* con, ID3D11RenderTargetView* tView, IDXGISwapChain* chain, ID3D11DepthStencilView* depth)
+void Renderer::Init(Camera* _Cam, ID3D11DeviceContext* con, ID3D11RenderTargetView* tView, IDXGISwapChain* chain, ID3D11DepthStencilView* depth, ID3D11Device* _device)
 {
+	device = _device;
 	Cam = _Cam;
 	context = con;
 	backBufferRTV = tView;
 	swapChain = chain;
 	depthStencilView = depth;
+	context->RSGetState(&defaultState);
+	CreateAdditionalRSStates();
 }
 
 //---------------------------------------------------------
 //Set Shaders
 //---------------------------------------------------------
 void Renderer::SetShaders(SimpleVertexShader* _vertexShader, SimplePixelShader* _pixelShader, 
-	SimpleVertexShader* _vertShaderNorm, SimplePixelShader* _pixShaderNorm, SimpleVertexShader* _skyVs, SimplePixelShader* _skyPs)
+	SimpleVertexShader* _vertShaderNorm, SimplePixelShader* _pixShaderNorm, SimpleVertexShader* _skyVs, 
+	SimplePixelShader* _skyPs, SimplePixelShader* _pixelShaderB, SimplePixelShader* _pixShaderNormB)
 {
 	vertexShader = _vertexShader;
 	pixelShader = _pixelShader;
@@ -45,6 +49,8 @@ void Renderer::SetShaders(SimpleVertexShader* _vertexShader, SimplePixelShader* 
 	pixelShaderNormalMap = _pixShaderNorm;
 	skyVS = _skyVs;
 	skyPS = _skyPs;
+	pixelShaderBlend = _pixelShaderB;
+	pixelShaderNormalMapBlend = _pixShaderNormB;
 }
 
 //---------------------------------------------------------
@@ -75,6 +81,7 @@ void Renderer::Draw(float deltaTime, float totalTime)
 		1.0f,
 		0);
 
+
 	// Set buffers in the input assembler
 	//  - Do this ONCE PER OBJECT you're drawing, since each object might
 	//    have different geometry.
@@ -84,18 +91,55 @@ void Renderer::Draw(float deltaTime, float totalTime)
 	//Loop through the list of Entities and draw each one
 	for (unsigned i = 0; i < currentScene->entities.size(); i++)
 	{
-		//call to set shaders goes here
-		if (currentScene->entities.at(i)->GetMat()->HasNormalMap())
+		//For the sake of time, I'm going to do things here that I should not
+		//mainly swap render and blend states per entity, unless the frame rate tanks
+
+		//check if you should use blending/transperancy
+		if (currentScene->entities.at(i)->GetMat()->UseTransperancy())
 		{
-			currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShaderNormalMap);
-			SetPixelShaderUp(pixelShaderNormalMap, i);
+			//Change render states based on blending/transperancy
+			//Turn off back face culling
+			context->RSSetState(rsNoCull);
+
+			// Turn on our custom blend state to enable alpha blending
+			context->OMSetBlendState(
+				bsAlphaBlend,
+				0, // Not using per-channel blend factors
+				0xFFFFFFFF); // Sample mask - Need all bits set (0xFFFFFFFF)
+
+							 //call to set shaders goes here
+			if (currentScene->entities.at(i)->GetMat()->HasNormalMap())
+			{
+				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShaderNormalMap);
+				SetPixelShaderUp(pixelShaderNormalMap, i);
+			}
+			else
+			{
+				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShader);
+				SetPixelShaderUp(pixelShader, i);
+			}
 		}
 		else
 		{
-			currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShader);
-			SetPixelShaderUp(pixelShader, i);
-		}
+			//Change render state back to defualt
+			context->RSSetState(defaultState);
 
+			// Turn on our custom blend state to enable alpha blending
+			context->OMSetBlendState(nullptr, 0, 0xFFFFFFFF); // Sample mask - Need all bits set (0xFFFFFFFF)
+
+
+			//call to set shaders goes here
+			if (currentScene->entities.at(i)->GetMat()->HasNormalMap())
+			{
+				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShaderNormalMap);
+				SetPixelShaderUp(pixelShaderNormalMap, i);
+			}
+			else
+			{
+				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShader);
+				SetPixelShaderUp(pixelShader, i);
+			}
+		}
 		
 
 		stride = sizeof(Vertex);
@@ -227,7 +271,31 @@ void Renderer::SetPixelShaderUp(SimplePixelShader* pShader, int i)
 }
 
 
+void Renderer::CreateAdditionalRSStates()
+{
+	// Set up a rasterizer state with no culling
+	D3D11_RASTERIZER_DESC rd = {};
+	rd.CullMode = D3D11_CULL_NONE;
+	rd.FillMode = D3D11_FILL_SOLID;
+	rd.DepthClipEnable = true;
+	device->CreateRasterizerState(&rd, &rsNoCull);
 
+	D3D11_BLEND_DESC bd = {};
+	bd.AlphaToCoverageEnable = false;
+	bd.IndependentBlendEnable = false;
+	bd.RenderTarget[0].BlendEnable = true;
+	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+
+	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
+	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	device->CreateBlendState(&bd, &bsAlphaBlend);
+}
 
 
 //---------------------------------------------------------

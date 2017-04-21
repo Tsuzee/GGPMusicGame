@@ -21,6 +21,7 @@ public:
 	void SetTexture(ID3D11Device*, ID3D11DeviceContext*, const wchar_t*);
 	void SetNormalMap(ID3D11Device*, ID3D11DeviceContext*, const wchar_t*);
 	void SetupSkybox(ID3D11Device*, ID3D11DeviceContext*, const wchar_t*);
+	void UseTransperancy(bool);
 
 	ID3D11RasterizerState* GetRast();
 	ID3D11DepthStencilState* GetDepthSD();
@@ -31,6 +32,7 @@ public:
 	ID3D11SamplerState* GetSampleState();
 
 	bool HasNormalMap();
+	bool UseTransperancy();
 
 private:
 	
@@ -45,4 +47,5 @@ private:
 	ID3D11ShaderResourceView* normalSRV;
 
 	bool hasNormal;
+	bool usesTrans;
 };

@@ -100,6 +100,7 @@ void SceneBuilder::BuildMaterials()
 
 	path = L"Assets/textures/rainbow.jpg";
 	laneMat = new Material(device, context, path);
+	laneMat->UseTransperancy(true);
 }
 
 //---------------------------------------------------------
