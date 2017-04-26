@@ -88,6 +88,28 @@ void Renderer::Draw(float deltaTime, float totalTime)
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	currentScene->name = "d";
+
+	if (currentScene->background != NULL)
+	{
+
+		vertexBuffer = currentScene->background->GetMesh()->GetVertexBuffer();
+		indexBuffer = currentScene->background->GetMesh()->GetIndexBuffer();
+
+		context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+		context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		currentScene->background->GetMat()->PrepareSkybox(Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), skyVS, skyPS);
+
+		context->RSSetState(currentScene->background->GetMat()->GetRast());
+		context->OMSetDepthStencilState(currentScene->background->GetMat()->GetDepthSD(), 0);
+		context->DrawIndexed(currentScene->background->GetMesh()->GetIndexCount(), 0, 0);
+
+		// Reset the render states we've changed
+		context->RSSetState(0);
+		context->OMSetDepthStencilState(0, 0);
+	}
+
+
 	//Loop through the list of Entities and draw each one
 	for (unsigned i = 0; i < currentScene->entities.size(); i++)
 	{
@@ -111,12 +133,12 @@ void Renderer::Draw(float deltaTime, float totalTime)
 			if (currentScene->entities.at(i)->GetMat()->HasNormalMap())
 			{
 				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShaderNormalMap);
-				SetPixelShaderUp(pixelShaderNormalMap, i);
+				SetPixelShaderUp(pixelShaderNormalMapBlend, i);
 			}
 			else
 			{
 				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShader);
-				SetPixelShaderUp(pixelShader, i);
+				SetPixelShaderUp(pixelShaderBlend, i);
 			}
 		}
 		else
@@ -160,6 +182,7 @@ void Renderer::Draw(float deltaTime, float totalTime)
 			0);    // Offset to add to each index when looking up vertices
 
 	}
+	/*
 	if (currentScene->background != NULL)
 	{
 
@@ -178,7 +201,7 @@ void Renderer::Draw(float deltaTime, float totalTime)
 		// Reset the render states we've changed
 		context->RSSetState(0);
 		context->OMSetDepthStencilState(0, 0);
-	}
+	}*/
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it

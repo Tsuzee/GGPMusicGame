@@ -98,7 +98,7 @@ void SceneBuilder::BuildMaterials()
 	//path = L"Assets/textures/SunnyCubeMap.dds";
 	backgroundMat = new Material(device, context, path, true);
 
-	path = L"Assets/textures/rainbow.jpg";
+	path = L"Assets/textures/rainbow3.png";
 	laneMat = new Material(device, context, path);
 	laneMat->UseTransperancy(true);
 }
@@ -209,12 +209,13 @@ void SceneBuilder::SetupScenes()
 	scene1->globalLights.push_back(ambient);
 	scene1->directionalLights.push_back(dirLight3);
 	scene1->entities.push_back(testNormals);
+	
 	scene1->directionalLights.push_back(dirLight);
 	scene1->directionalLights.push_back(dirLight2);
 	scene1->directionalLights.push_back(dirLight4);
 
 	scene1->background = menuBackgroundEnt;
-	
+	scene1->entities.push_back(laneEnt);
 
 	//Scene 2
 	//------------------------------------------------------------------
