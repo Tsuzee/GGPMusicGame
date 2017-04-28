@@ -13,6 +13,7 @@ Material::Material(ID3D11Device* device, ID3D11DeviceContext* context, const wch
 {
 	SetTexture(device, context, path);
 	hasNormal = false;
+	usesTrans = false;
 }
 
 //---------------------------------------------------------
@@ -22,6 +23,7 @@ Material::Material(ID3D11Device* device, ID3D11DeviceContext* context, const wch
 {
 	SetupSkybox(device, context, path);
 	hasNormal = false;
+	usesTrans = false;
 }
 
 //---------------------------------------------------------

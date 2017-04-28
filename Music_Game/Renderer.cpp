@@ -89,100 +89,68 @@ void Renderer::Draw(float deltaTime, float totalTime)
 	UINT offset = 0;
 	currentScene->name = "d";
 
-	if (currentScene->background != NULL)
-	{
+	//Change render state back to defualt
+	context->RSSetState(defaultState);
 
-		vertexBuffer = currentScene->background->GetMesh()->GetVertexBuffer();
-		indexBuffer = currentScene->background->GetMesh()->GetIndexBuffer();
-
-		context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-		context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-		currentScene->background->GetMat()->PrepareSkybox(Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), skyVS, skyPS);
-
-		context->RSSetState(currentScene->background->GetMat()->GetRast());
-		context->OMSetDepthStencilState(currentScene->background->GetMat()->GetDepthSD(), 0);
-		context->DrawIndexed(currentScene->background->GetMesh()->GetIndexCount(), 0, 0);
-
-		// Reset the render states we've changed
-		context->RSSetState(0);
-		context->OMSetDepthStencilState(0, 0);
-	}
+	// Turn off our custom blend state
+	context->OMSetBlendState(nullptr, 0, 0xFFFFFFFF);
 
 
 	//Loop through the list of Entities and draw each one
-	for (unsigned i = 0; i < currentScene->entities.size(); i++)
+	//Draw opaque entities first then opaque with normals then transparent with normals and finally transparent objects
+	if (currentScene->opaque.size() > 0)
 	{
-		//For the sake of time, I'm going to do things here that I should not
-		//mainly swap render and blend states per entity, unless the frame rate tanks
-
-		//check if you should use blending/transperancy
-		if (currentScene->entities.at(i)->GetMat()->UseTransperancy())
+		for (unsigned i = 0; i < currentScene->opaque.size(); i++)
 		{
-			//Change render states based on blending/transperancy
-			//Turn off back face culling
-			context->RSSetState(rsNoCull);
 
-			// Turn on our custom blend state to enable alpha blending
-			context->OMSetBlendState(
-				bsAlphaBlend,
-				0, // Not using per-channel blend factors
-				0xFFFFFFFF); // Sample mask - Need all bits set (0xFFFFFFFF)
+			currentScene->opaque.at(i)->GetMat()->PrepareMaterial(currentScene->opaque.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShader);
+			SetPixelShaderUp(pixelShader, currentScene->opaque, i);
 
-							 //call to set shaders goes here
-			if (currentScene->entities.at(i)->GetMat()->HasNormalMap())
-			{
-				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShaderNormalMap);
-				SetPixelShaderUp(pixelShaderNormalMapBlend, i);
-			}
-			else
-			{
-				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShader);
-				SetPixelShaderUp(pixelShaderBlend, i);
-			}
+
+			stride = sizeof(Vertex);
+			offset = 0;
+
+			vertexBuffer = currentScene->opaque.at(i)->GetMesh()->GetVertexBuffer(); //Store the vertex buffer address
+			context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+			context->IASetIndexBuffer(currentScene->opaque.at(i)->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+			// Finally do the actual drawing
+			//  - Do this ONCE PER OBJECT you intend to draw
+			//  - This will use all of the currently set DirectX "stuff" (shaders, buffers, etc)
+			//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
+			//     vertices in the currently set VERTEX BUFFER
+			context->DrawIndexed(
+				currentScene->opaque.at(i)->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
+				0,     // Offset to the first index we want to use
+				0);    // Offset to add to each index when looking up vertices
 		}
-		else
+	}//end of opaque draw calls
+
+	if (currentScene->opaqueNorm.size() > 0)
+	{
+		for (unsigned i = 0; i < currentScene->opaqueNorm.size(); i++)
 		{
-			//Change render state back to defualt
-			context->RSSetState(defaultState);
 
-			// Turn on our custom blend state to enable alpha blending
-			context->OMSetBlendState(nullptr, 0, 0xFFFFFFFF); // Sample mask - Need all bits set (0xFFFFFFFF)
+			currentScene->opaqueNorm.at(i)->GetMat()->PrepareMaterial(currentScene->opaqueNorm.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShaderNormalMap);
+			SetPixelShaderUp(pixelShaderNormalMap, currentScene->opaqueNorm, i);
 
 
-			//call to set shaders goes here
-			if (currentScene->entities.at(i)->GetMat()->HasNormalMap())
-			{
-				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShaderNormalMap);
-				SetPixelShaderUp(pixelShaderNormalMap, i);
-			}
-			else
-			{
-				currentScene->entities.at(i)->GetMat()->PrepareMaterial(currentScene->entities.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShader);
-				SetPixelShaderUp(pixelShader, i);
-			}
+			stride = sizeof(Vertex);
+			offset = 0;
+
+			vertexBuffer = currentScene->opaqueNorm.at(i)->GetMesh()->GetVertexBuffer(); //Store the vertex buffer address
+			context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+			context->IASetIndexBuffer(currentScene->opaqueNorm.at(i)->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+			context->DrawIndexed(
+				currentScene->opaqueNorm.at(i)->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
+				0,     // Offset to the first index we want to use
+				0);    // Offset to add to each index when looking up vertices
 		}
-		
+	}//end of opaque with normal maps draw calls
 
-		stride = sizeof(Vertex);
-		offset = 0;
-
-		vertexBuffer = currentScene->entities.at(i)->GetMesh()->GetVertexBuffer(); //Store the vertex buffer address
-		context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-		context->IASetIndexBuffer(currentScene->entities.at(i)->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-
-		// Finally do the actual drawing
-		//  - Do this ONCE PER OBJECT you intend to draw
-		//  - This will use all of the currently set DirectX "stuff" (shaders, buffers, etc)
-		//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
-		//     vertices in the currently set VERTEX BUFFER
-		context->DrawIndexed(
-			currentScene->entities.at(i)->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
-			0,     // Offset to the first index we want to use
-			0);    // Offset to add to each index when looking up vertices
-
-	}
-	/*
+	//------------------------------------------------------------------------------------------------------------------------------------------------
+	//Draw the skybox if one is loaded
 	if (currentScene->background != NULL)
 	{
 
@@ -201,7 +169,67 @@ void Renderer::Draw(float deltaTime, float totalTime)
 		// Reset the render states we've changed
 		context->RSSetState(0);
 		context->OMSetDepthStencilState(0, 0);
-	}*/
+	}
+
+
+	//------------------------------------------------------------------------------------------------------------------------------------------------
+	//Change render states based on blending/transperancy
+	//Turn off back face culling
+	context->RSSetState(rsNoCull);
+
+	// Turn on our custom blend state to enable alpha blending
+	context->OMSetBlendState(
+		bsAlphaBlend,
+		0, // Not using per-channel blend factors
+		0xFFFFFFFF); // Sample mask - Need all bits set (0xFFFFFFFF)
+
+	if (currentScene->transparentNorm.size() > 0)
+	{
+		for (unsigned i = 0; i < currentScene->transparentNorm.size(); i++)
+		{
+
+			currentScene->transparentNorm.at(i)->GetMat()->PrepareMaterial(currentScene->transparentNorm.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShaderNormalMap);
+			SetPixelShaderUp(pixelShaderNormalMapBlend, currentScene->transparentNorm, i);
+
+
+			stride = sizeof(Vertex);
+			offset = 0;
+
+			vertexBuffer = currentScene->transparentNorm.at(i)->GetMesh()->GetVertexBuffer(); //Store the vertex buffer address
+			context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+			context->IASetIndexBuffer(currentScene->transparentNorm.at(i)->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+			context->DrawIndexed(
+				currentScene->transparentNorm.at(i)->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
+				0,     // Offset to the first index we want to use
+				0);    // Offset to add to each index when looking up vertices
+		}
+	}//end of transparent with normal maps draw calls
+
+	if (currentScene->transparent.size() > 0)
+	{
+		for (unsigned i = 0; i < currentScene->transparent.size(); i++)
+		{
+
+			currentScene->transparent.at(i)->GetMat()->PrepareMaterial(currentScene->transparent.at(i)->GetWorldMat(), Cam->GetViewMatrix(), Cam->GetProjectionMatrix(), vertexShader);
+			SetPixelShaderUp(pixelShaderBlend, currentScene->transparent, i);
+
+
+			stride = sizeof(Vertex);
+			offset = 0;
+
+			vertexBuffer = currentScene->transparent.at(i)->GetMesh()->GetVertexBuffer(); //Store the vertex buffer address
+			context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+			context->IASetIndexBuffer(currentScene->transparent.at(i)->GetMesh()->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+			context->DrawIndexed(
+				currentScene->transparent.at(i)->GetMesh()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
+				0,     // Offset to the first index we want to use
+				0);    // Offset to add to each index when looking up vertices
+		}
+	}//end of transparent with normal maps draw calls
+
+
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
@@ -212,7 +240,7 @@ void Renderer::Draw(float deltaTime, float totalTime)
 //---------------------------------------------------------
 //Set the pixel shader up
 //---------------------------------------------------------
-void Renderer::SetPixelShaderUp(SimplePixelShader* pShader, int i)
+void Renderer::SetPixelShaderUp(SimplePixelShader* pShader, std::vector<Entity*> list, int i)
 {
 	pShader->SetFloat4("camPos", Cam->GetPositon());
 
@@ -274,13 +302,13 @@ void Renderer::SetPixelShaderUp(SimplePixelShader* pShader, int i)
 		);
 	}
 
-	pShader->SetSamplerState("basicSampler", currentScene->entities.at(i)->GetMat()->GetSampleState());
-	pShader->SetShaderResourceView("diffuseTexture", currentScene->entities.at(i)->GetMat()->GetSRV());
+	pShader->SetSamplerState("basicSampler", list.at(i)->GetMat()->GetSampleState());
+	pShader->SetShaderResourceView("diffuseTexture", list.at(i)->GetMat()->GetSRV());
 
 	//check for a normal map
-	if (currentScene->entities.at(i)->GetMat()->HasNormalMap())
+	if (list.at(i)->GetMat()->HasNormalMap())
 	{
-		pShader->SetShaderResourceView("NormalMap", currentScene->entities.at(i)->GetMat()->GetNormalSRV());
+		pShader->SetShaderResourceView("NormalMap", list.at(i)->GetMat()->GetNormalSRV());
 	}
 
 	if (currentScene->background != NULL)

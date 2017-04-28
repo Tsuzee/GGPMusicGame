@@ -1,5 +1,6 @@
 //Darren Farr
 #include "SceneBuilder.h"
+#include <iostream>
 
 using namespace DirectX;
 
@@ -206,9 +207,13 @@ void SceneBuilder::SetupScenes()
 	scene1 = new Scene();
 	scene1->name = "Menu";
 	scene1->entities = std::vector<Entity*>();
+	scene1->opaque = std::vector<Entity*>();
+	scene1->opaqueNorm = std::vector<Entity*>();
+	scene1->transparent = std::vector<Entity*>();
+	scene1->transparentNorm = std::vector<Entity*>();
 	scene1->globalLights.push_back(ambient);
 	scene1->directionalLights.push_back(dirLight3);
-	scene1->entities.push_back(testNormals);
+	//scene1->entities.push_back(testNormals);
 	
 	scene1->directionalLights.push_back(dirLight);
 	scene1->directionalLights.push_back(dirLight2);
@@ -222,6 +227,10 @@ void SceneBuilder::SetupScenes()
 	scene2 = new Scene();
 	scene2->name = "MainGame";
 	scene2->entities = std::vector<Entity*>();
+	scene2->opaque = std::vector<Entity*>();
+	scene2->opaqueNorm = std::vector<Entity*>();
+	scene2->transparent = std::vector<Entity*>();
+	scene2->transparentNorm = std::vector<Entity*>();
 	scene2->background = gameBackgroundEnt;
 	scene2->globalLights.push_back(ambient);
 	scene2->entities.push_back(playerEnt);
@@ -242,9 +251,17 @@ void SceneBuilder::SetupScenes()
 	scene3 = new Scene();
 	scene3->name = "Game Over";
 	scene3->entities = std::vector<Entity*>();
+	scene3->opaque = std::vector<Entity*>();
+	scene3->opaqueNorm = std::vector<Entity*>();
+	scene3->transparent = std::vector<Entity*>();
+	scene3->transparentNorm = std::vector<Entity*>();
 	scene3->directionalLights.push_back(dirLight4);
 	//scene3->background = creditsBackgroundEnt;
 	scene3->musicFileName = "04_-_Bloody_Revenge.mp3";
+
+	//Sort the entities in the scenes
+	SortEntityList(scene1);
+
 }
 
 
@@ -256,6 +273,34 @@ Entity* SceneBuilder::CreateEntity(Mesh* mesh, Material* mat, XMFLOAT3 pos, XMFL
 	Entity* ent = new Entity(mesh, mat, pos, rot, scale);
 
 	return ent;
+}
+
+//---------------------------------------------------------
+//Sort the entities lists into opaque or transparent lists, with or without normal maps
+//---------------------------------------------------------
+void SceneBuilder::SortEntityList(Scene* s)
+{
+	
+	for (int i = 0; i < s->entities.size(); i++)
+	{
+		if (s->entities.at(i)->GetMat()->UseTransperancy() && s->entities.at(i)->GetMat()->HasNormalMap())
+		{
+			s->transparentNorm.push_back(s->entities.at(i));
+		}
+		else if (s->entities.at(i)->GetMat()->UseTransperancy())
+		{
+			s->transparent.push_back(s->entities.at(i));
+		}
+		else if (s->entities.at(i)->GetMat()->HasNormalMap())
+		{
+			s->opaqueNorm.push_back(s->entities.at(i));
+		}
+		else
+		{
+			s->opaque.push_back(s->entities.at(i));
+		}
+	}
+	
 }
 
 //---------------------------------------------------------

@@ -24,7 +24,7 @@ public:
 	void SetScene(Scene*);
 
 private:
-	void SetPixelShaderUp(SimplePixelShader*, int);
+	void SetPixelShaderUp(SimplePixelShader*, std::vector<Entity*>, int);
 	void CreateAdditionalRSStates();
 
 	SimpleVertexShader* vertexShader;

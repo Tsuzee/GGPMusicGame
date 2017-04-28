@@ -33,6 +33,7 @@ public:
 
 private:
 	void SetupScenes();
+	void SortEntityList(Scene*);
 
 	Scene* scene1;
 	Scene* scene2;
