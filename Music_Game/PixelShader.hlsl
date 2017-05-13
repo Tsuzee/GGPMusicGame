@@ -164,11 +164,11 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float rim = smoothstep(0.7, 1.0, 1.0 - saturate(dot(input.normal, v)));
 
 	float4 light = 
-		globalLight
+		//globalLight
 		+ DirLights
-		+ PLights
-		+ SLights
-		+ getBlinnSpecular(lightP0, input, cameraPosition)
+		//+ PLights
+		//+ SLights
+		//+ getBlinnSpecular(lightP0, input, cameraPosition)
 		;
 
 	light = saturate(light) * surfaceColor;
