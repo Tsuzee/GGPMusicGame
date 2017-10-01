@@ -287,7 +287,8 @@ __pycache__/
 *.xsd.cs
 
 # Possible large size files
-*.dds
+#*.dds
 
 #
 !Music_Game/Assets/models/*.obj
+!Music_Game/lib/*

@@ -1,6 +1,6 @@
 #include "Asteroid.h"
 using namespace DirectX;
-
+#include "Game.h"
 
 Asteroid::Asteroid()
 {
@@ -18,28 +18,34 @@ Asteroid::Asteroid(Entity * asterEntity)
 	this->asterEntity = asterEntity;
 
 	asterCollider = new Collider(asterEntity->GetMesh());
+	active = false;
 }
 
 void Asteroid::Update(float deltaTime)
 {
-	Move(0, 0, 2,deltaTime);
-	XMVECTOR pos = XMLoadFloat3(&(asterEntity->GetPosition()));
-	XMFLOAT3 position;
-	XMFLOAT3 rota= asterEntity->GetRotation();
-	rota.y += (rand() % 3)*0.0005f;
-	rota.x += (rand() % 3)*0.0005f;
-	rota.z += (rand() % 3)*0.0005f;
-	asterEntity->SetRotation(rota);
+	if (active)
+	{
+		Move(-0.2f, 0, 2, deltaTime);
+		XMVECTOR pos = XMLoadFloat3(&(asterEntity->GetPosition()));
+		XMFLOAT3 position;
+		XMFLOAT3 rota = asterEntity->GetRotation();
+		rota.y += (rand() % 3)*0.005f;
+		rota.x += (rand() % 3)*0.005f;
+		rota.z += (rand() % 3)*0.005f;
+		//rota.y += 0.005f;
+		asterEntity->SetRotation(rota);
 
-	XMStoreFloat3(&position, pos);
-	if (position.z < -3) {
-		RandomPos();
+
+		XMStoreFloat3(&position, pos);
+		if (position.z < -10) {
+			active = false;
+		}
+
+		if (position.z < -1.0f) {
+			collided = true;			
+		}
+
 	}
-	//if
-	//random();
-	
-
-
 }
 
 void Asteroid::RandomPos() {
@@ -81,4 +87,40 @@ void Asteroid::Move(float x, float y, float z,float deltaTime)
 Collider* Asteroid::GetCollider()
 {
 	return asterCollider;
+}
+
+// --------------------------------------------------------
+//Set the asteroid to active and its lane to move to (1,2,3)
+// --------------------------------------------------------
+void Asteroid::SetActive(int laneNumber)
+{
+	collided = false;
+	XMFLOAT3 position;
+	active = true;
+
+	switch (laneNumber)
+	{
+	case 1:
+	{
+		position = XMFLOAT3(-4.0f, 0.0f, 20.0f);
+		asterEntity->SetPosition(position);
+		break;
+	}
+	case 2:
+	{
+		position = XMFLOAT3(+0.1f, 0.0f, 20.0f);
+		asterEntity->SetPosition(position);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+// --------------------------------------------------------
+//Is the Asteroid active?
+// --------------------------------------------------------
+bool Asteroid::IsActive()
+{
+	return active;
 }

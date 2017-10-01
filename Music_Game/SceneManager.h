@@ -16,7 +16,9 @@ public:
 	Scene* GetScene(int);
 	void AddScene(Scene*);
 	void RemoveScene(int);
+	unsigned int GetNumOfScenes();
 
 private:
 	std::vector<Scene*>Scenes;
+	unsigned int numOfScenes;
 };

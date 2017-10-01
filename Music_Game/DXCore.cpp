@@ -74,6 +74,20 @@ DXCore::~DXCore()
 
 	if (swapChain) { swapChain->Release();}
 	if (context) { context->Release();}
+
+//#if defined (DEBUG) | defined (_DEBUG)
+//	HRESULT hr = S_OK;
+//
+//	ID3D11Debug * DebugDevice = nullptr;
+//	hr = device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&DebugDevice));
+//	//if (FAILED(hr)) return hr;
+//
+//	hr = DebugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+//	//if (FAILED(hr)) return hr;
+//
+//	DebugDevice->Release();
+//#endif
+
 	if (device) { device->Release();}
 }
 

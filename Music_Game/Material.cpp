@@ -12,17 +12,29 @@ Material::Material() {}
 Material::Material(ID3D11Device* device, ID3D11DeviceContext* context, const wchar_t* path)
 {
 	SetTexture(device, context, path);
+	hasNormal = false;
+	usesTrans = false;
 }
 
 //---------------------------------------------------------
-//Constructor override to create a material for a skybox
+//Constructor override to create a material for a skybox, particles, and other
+//Type 0 = skybox, 1 = particle, 
 //---------------------------------------------------------
-Material::Material(ID3D11Device* device, ID3D11DeviceContext* context, const wchar_t* path, bool isSkybox)
+Material::Material(ID3D11Device* device, ID3D11DeviceContext* context, const wchar_t* path, int type)
 {
-	if(isSkybox)
+	if (type == 0)
+	{
 		SetupSkybox(device, context, path);
-	else
+		hasNormal = false;
+		usesTrans = false;
+	}
+
+	if (type == 1)
+	{
 		SetupParticle(device, context, path);
+		hasNormal = false;
+		usesTrans = false;
+	}
 }
 
 //---------------------------------------------------------
@@ -30,10 +42,7 @@ Material::Material(ID3D11Device* device, ID3D11DeviceContext* context, const wch
 //---------------------------------------------------------
 Material::~Material() 
 {
-	if (SRV != nullptr) 
-	{
-		SRV->Release(); 
-	}
+	if (SRV != nullptr) { SRV->Release(); }
 	
 	if (skySRV != nullptr)
 	{
@@ -41,6 +50,11 @@ Material::~Material()
 		rsSky->Release();
 		dsSky->Release();
 	}
+
+	if (normalSRV != nullptr) { normalSRV->Release(); }
+
+	sampleState->Release();
+
 	
 	if (particleTexture != nullptr)
 	{
@@ -48,8 +62,8 @@ Material::~Material()
 		particleBlendState->Release();
 		particleDepthState->Release();
 	}
+
 	delete sampleDes;
-	sampleState->Release();
 
 }
 
@@ -68,6 +82,9 @@ void Material::SetTexture(ID3D11Device* device, ID3D11DeviceContext* context, co
 
 	SRV = nullptr;
 	skySRV = nullptr;
+
+	normalSRV = nullptr;
+
 	particleTexture = nullptr;
 
 	DirectX::CreateWICTextureFromFile(device, context, path, 0, &SRV);
@@ -80,6 +97,27 @@ void Material::SetTexture(ID3D11Device* device, ID3D11DeviceContext* context, co
 //---------------------------------------------------------
 void Material::SetupSkybox(ID3D11Device* device, ID3D11DeviceContext* context, const wchar_t* path)
 {
+	sampleState = nullptr;
+	sampleDes = new D3D11_SAMPLER_DESC();
+	sampleDes->AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampleDes->AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampleDes->AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sampleDes->Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampleDes->MaxLOD = D3D11_FLOAT32_MAX;
+
+	device->CreateSamplerState(sampleDes, &sampleState);
+
+	SRV = nullptr;
+	skySRV = nullptr;
+
+	normalSRV = nullptr;
+
+	particleTexture = nullptr;
+
+	HRESULT hr;
+	hr = DirectX::CreateDDSTextureFromFile(device, path, 0, &skySRV);
+
+	if (FAILED(hr)) return;
 
 	D3D11_RASTERIZER_DESC rsDesc = {};
 	rsDesc.FillMode = D3D11_FILL_SOLID;
@@ -92,29 +130,13 @@ void Material::SetupSkybox(ID3D11Device* device, ID3D11DeviceContext* context, c
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&dsDesc, &dsSky);
-
-	sampleState = nullptr;
-	sampleDes = new D3D11_SAMPLER_DESC();
-	sampleDes->AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampleDes->AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampleDes->AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampleDes->Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	sampleDes->MaxLOD = D3D11_FLOAT32_MAX;
-
-	SRV = nullptr;
-	skySRV = nullptr;
-	particleTexture = nullptr;
-
-	HRESULT hr;
-	hr = DirectX::CreateDDSTextureFromFile(device, path, 0, &skySRV);
-
-	device->CreateSamplerState(sampleDes, &sampleState);
 }
 
 void Material::SetupParticle(ID3D11Device* device, ID3D11DeviceContext* context, const wchar_t* path)
 {
 	SRV = nullptr;
 	skySRV = nullptr;
+	normalSRV = nullptr;
 	particleTexture = nullptr;
 
 	DirectX::CreateWICTextureFromFile(device, context, path, 0, &particleTexture);
@@ -152,6 +174,16 @@ void Material::SetupParticle(ID3D11Device* device, ID3D11DeviceContext* context,
 	blend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 	blend.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	device->CreateBlendState(&blend, &particleBlendState);
+}
+
+//---------------------------------------------------------
+//Set a normal map
+//---------------------------------------------------------
+void Material::SetNormalMap(ID3D11Device* device, ID3D11DeviceContext* context, const wchar_t* path)
+{
+	hasNormal = true;
+
+	DirectX::CreateWICTextureFromFile(device, context, path, 0, &normalSRV);
 }
 
 //---------------------------------------------------------
@@ -193,11 +225,27 @@ void Material::PrepareSkybox(DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proje
 }
 
 //---------------------------------------------------------
+//Set whether or not the material uses transperancy
+//---------------------------------------------------------
+void Material::UseTransperancy(bool _usesTrans)
+{
+	usesTrans = _usesTrans;
+}
+
+//---------------------------------------------------------
 //Return the SRV
 //---------------------------------------------------------
 ID3D11ShaderResourceView* Material::GetSRV()
 {
 	return SRV;
+}
+
+//---------------------------------------------------------
+//Return the SRV
+//---------------------------------------------------------
+ID3D11ShaderResourceView* Material::GetNormalSRV()
+{
+	return normalSRV;
 }
 
 //---------------------------------------------------------
@@ -232,6 +280,23 @@ ID3D11DepthStencilState* Material::GetDepthSD()
 	return dsSky;
 }
 
+//---------------------------------------------------------
+//Return if the material has a normal map or not
+//---------------------------------------------------------
+bool Material::HasNormalMap()
+{
+	return hasNormal;
+}
+
+//---------------------------------------------------------
+//Return if the material uses transperancy or not
+//---------------------------------------------------------
+bool Material::UseTransperancy()
+{
+	return usesTrans;
+
+}
+
 ID3D11DepthStencilState* Material::GetParticleDepthState()
 {
 	return particleDepthState;
@@ -245,4 +310,5 @@ ID3D11BlendState* Material::GetParticleBlendState()
 ID3D11ShaderResourceView* Material::GetParticleTexture()
 {
 	return particleTexture;
+
 }

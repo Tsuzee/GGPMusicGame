@@ -135,13 +135,13 @@ void Emitter::Update(float dt)
 			UpdateSingleParticle(dt, i);
 	}
 
-	//// Add to the time
+	// Add to the time
 	//timeSinceEmit += dt;
 
 	//// Enough time to emit?
 	//while (timeSinceEmit > secondsPerParticle)
 	//{
-	//	SpawnParticle();
+	//	//SpawnParticle();
 	//	timeSinceEmit -= secondsPerParticle;
 	//}
 }
@@ -196,21 +196,24 @@ void Emitter::SpawnParticle()
 	if (livingParticleCount == maxParticles)
 		return;
 
-	// Reset the first dead particle
-	particles[firstDeadIndex].Age = 0;
-	particles[firstDeadIndex].Size = startSize;
-	particles[firstDeadIndex].Color = startColor;
-	particles[firstDeadIndex].Position = emitterPosition;
-	particles[firstDeadIndex].StartVelocity = startVelocity;
-	particles[firstDeadIndex].StartVelocity.x = cos(firstDeadIndex) * startVelocity.x;
-	particles[firstDeadIndex].StartVelocity.y = sin(firstDeadIndex) * startVelocity.y;
-	particles[firstDeadIndex].StartVelocity.z = 0;
+	while (livingParticleCount < maxParticles)
+	{
+		// Reset the first dead particle
+		particles[firstDeadIndex].Age = 0;
+		particles[firstDeadIndex].Size = startSize;
+		particles[firstDeadIndex].Color = startColor;
+		particles[firstDeadIndex].Position = emitterPosition;
+		particles[firstDeadIndex].StartVelocity = startVelocity;
+		particles[firstDeadIndex].StartVelocity.x = cos(firstDeadIndex) * startVelocity.x;
+		particles[firstDeadIndex].StartVelocity.y = sin(firstDeadIndex) * startVelocity.y;
+		particles[firstDeadIndex].StartVelocity.z = 0;
 
-	// Increment and wrap
-	firstDeadIndex++;
-	firstDeadIndex %= maxParticles;
+		// Increment and wrap
+		firstDeadIndex++;
+		firstDeadIndex %= maxParticles;
 
-	livingParticleCount++;
+		livingParticleCount++;
+	}
 }
 
 void Emitter::CopyParticlesToGPU(ID3D11DeviceContext* context)

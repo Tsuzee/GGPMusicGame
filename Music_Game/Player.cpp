@@ -4,6 +4,7 @@ using namespace DirectX;
 
 Player::Player()
 {
+	
 }
 
 Player::Player(Entity* playerEnt) : playerEntity(playerEnt)
@@ -19,24 +20,36 @@ Player::~Player()
 
 void Player::Update(float deltaTime)
 {
-	if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+	if ((GetAsyncKeyState(VK_LEFT) & 0x8000))
 	{
-		Move(1,0,0,deltaTime);
+		holdTimer += deltaTime;
+		if (holdTimer <= 0.2f) {
+			XMFLOAT3 pos(-1.0f, 0.0f, 0.0f);
+			playerEntity->SetPosition(pos);
+		}
+		else {
+			XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
+			playerEntity->SetPosition(pos);
+		}	
+
 	}
 
-	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+	else if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
 	{
-		Move(-1,0,0, deltaTime);
+		holdTimer += deltaTime;
+		if (holdTimer <= 0.2f) {
+			XMFLOAT3 pos(1.0f, 0.0f, 0.0f);
+			playerEntity->SetPosition(pos);
+		}
+		else {
+			XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
+			playerEntity->SetPosition(pos);
+		}
 	}
-
-	if (GetAsyncKeyState(VK_UP) & 0x8000)
-	{
-		Move(0, 1, 0, deltaTime);
-	}
-
-	if (GetAsyncKeyState(VK_DOWN) & 0x8000)
-	{
-		Move(0, -1, 0, deltaTime);
+	else {
+		holdTimer = 0;
+		XMFLOAT3 pos(0.0f, 0.0f, 0.0f);
+		playerEntity->SetPosition(pos);
 	}
 }
 

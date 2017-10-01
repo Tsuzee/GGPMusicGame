@@ -20,6 +20,8 @@ public:
 
 	void Resize(unsigned int, unsigned int);
 
+	void SetDebugMode(bool);
+
 	DirectX::XMFLOAT4X4 GetViewMatrix();
 	DirectX::XMFLOAT4X4 GetProjectionMatrix();
 	DirectX::XMFLOAT4 GetPositon();
@@ -40,6 +42,7 @@ private:
 	unsigned int height;
 
 	bool mouseDown;
+	bool debugMode;
 
 	POINT lastMouse, mouse;
 };

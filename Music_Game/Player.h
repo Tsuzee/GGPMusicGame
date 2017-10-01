@@ -18,5 +18,7 @@ private:
 	Entity* playerEntity;
 	Collider* playerCollider;
 	void Move(float x, float y, float z, float deltaTime);
+	float holdTimer=0;
+	bool holdFlag=false;
 };
 

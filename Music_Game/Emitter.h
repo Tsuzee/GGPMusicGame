@@ -56,7 +56,6 @@ public:
 	void SetEmitterPosition(float x, float y, float z);
 
 	Material* GetMaterial();
-		
 private:
 	// Emission properties
 	int particlesPerSecond;

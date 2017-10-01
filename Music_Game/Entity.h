@@ -4,7 +4,9 @@
 #include <DirectXMath.h>
 #include "Mesh.h"
 #include "Material.h"
+#include <vector>
 #include "Transform.h"
+
 
 //Entity Class
 //An object to hold mesh(s) and local properties
@@ -30,6 +32,11 @@ public:
 	Mesh* GetMesh();
 	Material* GetMat();
 
+	Entity* parent;
+	std::vector<Entity*> children;
+
+	void SetParent(Entity* e);
+
 private:
 
 	void SetWorldMat();
@@ -37,11 +44,12 @@ private:
 	Mesh* mesh;
 	Material* mat;
 
+
+
 	DirectX::XMFLOAT4X4 worldMat;
+	DirectX::XMFLOAT4X4 localMat;
 	Transform transform;
-	/*DirectX::XMFLOAT3 pos;
-	DirectX::XMFLOAT3 rot;
-	DirectX::XMFLOAT3 scale;*/
+
 	DirectX::XMFLOAT3 posOrig;
 	DirectX::XMFLOAT3 rotOrig;
 	DirectX::XMFLOAT3 scaleOrig;

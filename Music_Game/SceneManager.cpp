@@ -6,7 +6,7 @@
 //---------------------------------------------------------
 SceneManager::SceneManager()
 {
-
+	numOfScenes = 0;
 }
 
 //---------------------------------------------------------
@@ -31,6 +31,7 @@ Scene* SceneManager::GetScene(int num)
 void SceneManager::AddScene(Scene* s)
 {
 	Scenes.push_back(s);
+	numOfScenes++;
 }
 
 //---------------------------------------------------------
@@ -48,4 +49,13 @@ void SceneManager::RemoveScene(int num)
 	}
 
 	Scenes = temp;
+	numOfScenes--;
+}
+
+//---------------------------------------------------------
+//Returns the number of scenes
+//---------------------------------------------------------
+unsigned int SceneManager::GetNumOfScenes()
+{
+	return numOfScenes;
 }

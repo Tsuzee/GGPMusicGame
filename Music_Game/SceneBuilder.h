@@ -30,37 +30,66 @@ public:
 	Entity* CreateEntity(Mesh*, Material*, DirectX::XMFLOAT3, DirectX::XMFLOAT3, DirectX::XMFLOAT3);
 	Scene* GetScene(int);
 	Entity* GetPlayerEntity();
-	Entity* GetAsteroidEntity();
+
+	Entity* GetAsteroidEntity(int);
 
 private:
 	void SetupScenes();
+	void SortEntityList(Scene*);
 
 	Scene* scene1;
 	Scene* scene2;
 	Scene* scene3;
+	Scene* scene4;
 
 	ID3D11Device* device;
 	ID3D11DeviceContext* context;
 
 	Mesh* cubeMesh;
 	Mesh* quadMesh;
+	Mesh* sphereMesh;
 	Mesh* playerMesh;
 	Mesh* asteroidMesh;
-
-	//Material* creditsMat;
+	Mesh* skyboxMesh;
+	
+	Material* creditsMat;
 	Material* menuMat;
 	Material* playerMat;
+	Material* laneMat;
 	Material* asteroidMat;
 	Material* backgroundMat;
+
+	Material* plutoMat;
+	Material* venusMat;
+	Material* sunMat;
+	Material* earthMat;
+	Material* moonMat;
+	Material* p1Mat;
+	Material* p2Mat;
+	Material* p3Mat;
+	Material* lane2Mat;
+	Material* titleMat;
+
 	Material* particelMat;
 
 	Entity* menuEnt;
+	Entity* titleEnt;
 	Entity* menuBackgroundEnt;
 	Entity* gameBackgroundEnt;
 	Entity* creditsBackgroundEnt;
 	Entity* playerEnt;
-	Entity* asteroidEnt;
 
+
+	Entity* laneEnt;
+	Entity* laneEnt2;
+	Entity* plutoEnt;
+	Entity* venusEnt;
+	Entity* sunEnt;
+	Entity* moonEnt;
+	Entity* earthEnt;
+	Entity* p1;
+	Entity* p2;
+	Entity* p3;
 
 	GlobalLight* ambient;
 
@@ -73,6 +102,10 @@ private:
 
 	SpotLight* spotLight;
 
+
+	Entity* asteroidList[12];
+
 	//Particles Emitter
 	Emitter *emitter;
+
 };
